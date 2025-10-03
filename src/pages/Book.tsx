@@ -86,7 +86,7 @@ const Book = () => {
                   <div className="space-y-3 text-primary-foreground/80">
                     <div className="flex justify-between">
                       <span>Pages:</span>
-                      <span className="font-semibold">342</span>''
+                      <span className="font-semibold">1</span>
                      </div>
                     <div className="flex justify-between">
                       <span>Genre:</span>
