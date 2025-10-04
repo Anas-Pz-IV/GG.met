@@ -135,11 +135,31 @@ const reverseTranslations: Record<string, string> = Object.fromEntries(
 
 // Translate English -> Arabic
 export const translateText = (text: string): string => {
-  const cleaned = text.trim().toLowerCase();
+  const cleaned = text.trim();
+
+  // First try exact match
+  if (translations[cleaned]) {
+    return translations[cleaned];
+  }
+
+  // Try case-insensitive match
+  const lowerCleaned = cleaned.toLowerCase();
   const match = Object.entries(translations).find(
-    ([key]) => key.trim().toLowerCase() === cleaned
+    ([key]) => key.trim().toLowerCase() === lowerCleaned
   );
-  return match ? match[1] : text;
+
+  if (match) {
+    return match[1];
+  }
+
+  // Try partial match for phrases
+  for (const [key, value] of Object.entries(translations)) {
+    if (key.toLowerCase() === lowerCleaned) {
+      return value;
+    }
+  }
+
+  return text;
 };
 
 // Translate Arabic -> English

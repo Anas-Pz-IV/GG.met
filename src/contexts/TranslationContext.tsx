@@ -36,20 +36,20 @@ export const TranslationProvider = ({ children }: TranslationProviderProps) => {
     // Process text nodes
     for (let i = 0; i < element.childNodes.length; i++) {
       const node = element.childNodes[i];
-      
+
       if (node.nodeType === Node.TEXT_NODE && node.textContent?.trim()) {
         const currentText = node.textContent.trim();
-        
+
         // Skip if text is too short or contains only symbols/numbers
-        if (currentText.length < 2 || /^[^\w\s]*$/.test(currentText)) {
+        if (currentText.length < 1 || /^[^\w\s\u0600-\u06FF]*$/.test(currentText)) {
           continue;
         }
 
         try {
-          const translatedText = isReverse 
+          const translatedText = isReverse
             ? reverseTranslateText(currentText)
             : translateText(currentText);
-          
+
           // Only update if translation is different
           if (translatedText !== currentText) {
             // Store original text for restoration
@@ -57,9 +57,11 @@ export const TranslationProvider = ({ children }: TranslationProviderProps) => {
             if (!isReverse) {
               setOriginalTexts(prev => new Map(prev.set(nodeId, currentText)));
             }
-            
-            // Replace the text
-            node.textContent = translatedText;
+
+            // Preserve surrounding whitespace
+            const leadingSpace = node.textContent.match(/^\s*/)?.[0] || '';
+            const trailingSpace = node.textContent.match(/\s*$/)?.[0] || '';
+            node.textContent = leadingSpace + translatedText + trailingSpace;
           }
         } catch (error) {
           console.error('Failed to translate text:', currentText, error);
@@ -77,19 +79,24 @@ export const TranslationProvider = ({ children }: TranslationProviderProps) => {
     if (isTranslating) return;
 
     setIsTranslating(true);
-    
+
     try {
       // Get all text elements on the page
       const mainContent = document.querySelector('main') || document.body;
-      
+      const htmlElement = document.documentElement;
+
       if (isTranslated) {
         // Reset to English
         await translateElementsRecursively(mainContent, true);
+        htmlElement.setAttribute('dir', 'ltr');
+        htmlElement.setAttribute('lang', 'en');
         setIsTranslated(false);
         setOriginalTexts(new Map());
       } else {
         // Translate to Arabic
         await translateElementsRecursively(mainContent, false);
+        htmlElement.setAttribute('dir', 'rtl');
+        htmlElement.setAttribute('lang', 'ar');
         setIsTranslated(true);
       }
     } catch (error) {
